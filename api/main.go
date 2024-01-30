@@ -3,18 +3,21 @@ package main
 import (
 	"log"
 
+	"gugu/routes"
 	"gugu/server"
 )
 
 func main() {
-	// Inicializa o banco de dados
+	// initialize database
 	db, err := server.InitializeDB()
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
 
-	// Inicia o servidor chamando a função do pacote "server"
+	// initialize user routes
+	routes.SetupUserRoutes(db)
+
 	if err := server.InitServer(); err != nil {
 		log.Fatal(err)
 	}
