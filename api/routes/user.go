@@ -5,7 +5,6 @@ import (
 	handler "gugu/handlers/userHandler"
 	repository "gugu/repositories/userRepository"
 	service "gugu/services/user"
-	"net/http"
 
 	"github.com/gorilla/mux"
 )
@@ -18,14 +17,9 @@ func initializeUserHandler(db *sql.DB) *handler.UserHandler {
 	return userHandler
 }
 
-// setupRoutes é uma função auxiliar para configurar as rotas
-func SetupUserRoutes(db *sql.DB) {
+func SetupUserRoutes(router *mux.Router, db *sql.DB) {
 	userHandler := initializeUserHandler(db)
 
-	router := mux.NewRouter()
-
-	// create user
-	router.HandleFunc("/users", userHandler.CreateUserHandler).Methods("POST")
-
-	http.Handle("/", router)
+	router.HandleFunc("/user/create", userHandler.CreateUserHandler).Methods("POST")
+	router.HandleFunc("/user/list", userHandler.ListUsersHandler).Methods("GET")
 }

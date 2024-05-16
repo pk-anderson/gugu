@@ -2,6 +2,7 @@ package user
 
 import (
 	"fmt"
+	user "gugu/interfaces/user"
 	"gugu/repositories/userRepository"
 	"gugu/utils"
 	"regexp"
@@ -31,23 +32,32 @@ func validations(username, email, password string) []string {
 	return errs
 }
 
-func (s *UserService) CreateUser(username, email, password string) (string, error) {
+func (s *UserService) CreateUser(username, email, password, bio string, profilePic []byte) (string, error) {
 	errs := validations(username, email, password)
 
 	if len(errs) > 0 {
 		return "", fmt.Errorf(strings.Join(errs, "; "))
 	}
 
-	uuid := utils.GenerateUUID()
+	userId := utils.GenerateUUID()
 
 	hashPassword, err := utils.HashPassword(password)
 	if err != nil {
 		return "", err
 	}
 
-	err = s.UserRepository.InsertUser(uuid, username, email, hashPassword)
+	err = s.UserRepository.InsertUser(userId, username, email, hashPassword, bio, profilePic)
 	if err != nil {
 		return "", err
 	}
-	return uuid, nil
+	return userId, nil
+}
+
+func (s *UserService) ListUsers() ([]user.User, error) {
+	users, err := s.UserRepository.ListUsers()
+	if err != nil {
+		return nil, err
+	}
+
+	return users, nil
 }

@@ -14,7 +14,8 @@ func InitializeDB() (*sql.DB, error) {
 		return nil, fmt.Errorf("error on getting .env: %w", err)
 	}
 
-	// Configuração da conexão com o banco de dados
+	fmt.Println(os.Getenv("DB_SSL_MODE"))
+
 	connStr := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=%s",
 		os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_NAME"), os.Getenv("DB_SSL_MODE"))
 
