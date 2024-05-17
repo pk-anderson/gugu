@@ -21,7 +21,7 @@ func main() {
 	r := mux.NewRouter()
 	http.Handle("/", r)
 
-	routes.SetupUserRoutes(r, db)
+	routes.SetupRoutes(r, db)
 
 	fmt.Println("Server running on port: 8080")
 

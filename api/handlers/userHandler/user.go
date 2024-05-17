@@ -14,7 +14,7 @@ type UserHandler struct {
 	DB *sql.DB
 }
 
-// CREATE REQUEST
+// CREATE USER
 
 type CreateUserRequest struct {
 	Username   string `json:"username"`
@@ -82,7 +82,7 @@ func (h *UserHandler) CreateUserHandler(w http.ResponseWriter, r *http.Request) 
 	w.Write(jsonResponse)
 }
 
-// LIST REQUEST
+// LIST USERS
 
 type ListUsersResponse struct {
 	Users []userInterface.User `json:"users"`
