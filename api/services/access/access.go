@@ -10,7 +10,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/joho/godotenv"
 )
 
@@ -26,7 +26,7 @@ type Claims struct {
 	UserID   string `json:"userId"`
 	Email    string `json:"email"`
 	Username string `json:"username"`
-	jwt.StandardClaims
+	jwt.RegisteredClaims
 }
 
 func (s *accessService) Login(email, password string) (string, error) {
@@ -47,8 +47,8 @@ func (s *accessService) Login(email, password string) (string, error) {
 		UserID:   user.UserId,
 		Email:    user.Email,
 		Username: user.Username,
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: expirationTime.Unix(),
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(expirationTime),
 		},
 	}
 	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
