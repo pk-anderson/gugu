@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	userInterface "gugu/interfaces/user"
@@ -10,7 +11,7 @@ import (
 )
 
 type UserHandler struct {
-	UserService *user.UserService
+	DB *sql.DB
 }
 
 // CREATE REQUEST
@@ -54,7 +55,9 @@ func (h *UserHandler) CreateUserHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	userId, err := h.UserService.CreateUser(
+	service := user.NewService(h.DB)
+
+	userId, err := service.CreateUser(
 		request.Username,
 		request.Email,
 		request.Password,
@@ -86,8 +89,9 @@ type ListUsersResponse struct {
 }
 
 func (h *UserHandler) ListUsersHandler(w http.ResponseWriter, r *http.Request) {
+	service := user.NewService(h.DB)
 
-	users, err := h.UserService.ListUsers()
+	users, err := service.ListUsers()
 	if err != nil {
 		http.Error(w, fmt.Sprintf("error on listing users: %s", err), http.StatusInternalServerError)
 		return

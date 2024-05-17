@@ -1,6 +1,7 @@
 package user
 
 import (
+	"database/sql"
 	"fmt"
 	user "gugu/interfaces/user"
 	"gugu/repositories/userRepository"
@@ -9,8 +10,13 @@ import (
 	"strings"
 )
 
-type UserService struct {
-	UserRepository *userRepository.UserRepository
+type UserService interface {
+	CreateUser(username, email, password, bio string, profilePic []byte) (string, error)
+	ListUsers() ([]user.User, error)
+}
+
+type userService struct {
+	DB *sql.DB
 }
 
 func validations(username, email, password string) []string {
@@ -32,7 +38,7 @@ func validations(username, email, password string) []string {
 	return errs
 }
 
-func (s *UserService) CreateUser(username, email, password, bio string, profilePic []byte) (string, error) {
+func (s *userService) CreateUser(username, email, password, bio string, profilePic []byte) (string, error) {
 	errs := validations(username, email, password)
 
 	if len(errs) > 0 {
@@ -46,18 +52,27 @@ func (s *UserService) CreateUser(username, email, password, bio string, profileP
 		return "", err
 	}
 
-	err = s.UserRepository.InsertUser(userId, username, email, hashPassword, bio, profilePic)
+	rep := userRepository.NewRepository(s.DB)
+
+	err = rep.InsertUser(userId, username, email, hashPassword, bio, profilePic)
 	if err != nil {
 		return "", err
 	}
 	return userId, nil
 }
 
-func (s *UserService) ListUsers() ([]user.User, error) {
-	users, err := s.UserRepository.ListUsers()
+func (s *userService) ListUsers() ([]user.User, error) {
+	rep := userRepository.NewRepository(s.DB)
+	users, err := rep.ListUsers()
 	if err != nil {
 		return nil, err
 	}
 
 	return users, nil
+}
+
+func NewService(DB *sql.DB) UserService {
+	return &userService{
+		DB: DB,
+	}
 }
