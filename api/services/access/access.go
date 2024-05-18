@@ -16,6 +16,7 @@ import (
 
 type AccessService interface {
 	Login(email, password string) (string, error)
+	Logout(token string) error
 }
 
 type accessService struct {
@@ -67,6 +68,16 @@ func (s *accessService) Login(email, password string) (string, error) {
 	}
 
 	return token, nil
+}
+
+func (s *accessService) Logout(token string) error {
+	accessRep := accessRepository.NewRepository(s.DB)
+	err := accessRep.RevokeAccessToken(token)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func NewService(DB *sql.DB) AccessService {

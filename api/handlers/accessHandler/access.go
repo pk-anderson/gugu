@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"gugu/services/access"
+	"gugu/utils"
 	"net/http"
 )
 
@@ -50,4 +51,24 @@ func (h *AccessHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	w.Write(jsonResponse)
+}
+
+// LOGOUT
+
+func (h *AccessHandler) LogoutHandler(w http.ResponseWriter, r *http.Request) {
+	token, ok := r.Context().Value(utils.TokenString).(string)
+	if !ok {
+		http.Error(w, "Token not found in context", http.StatusInternalServerError)
+		return
+	}
+
+	service := access.NewService(h.DB)
+	err := service.Logout(token)
+	if err != nil {
+		http.Error(w, "Error revoking token", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Logout successful"))
 }

@@ -56,6 +56,7 @@ func AuthMiddleware(db *sql.DB, next http.HandlerFunc) http.HandlerFunc {
 		}
 
 		ctx := context.WithValue(r.Context(), utils.UserIDKey, claims.UserID)
+		ctx = context.WithValue(ctx, utils.TokenString, tokenString)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	}
 }

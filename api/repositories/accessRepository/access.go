@@ -9,6 +9,7 @@ type AccessRepository interface {
 	InsertAccessToken(access *access.Access) error
 	GetAccessById(id string) (*access.Access, error)
 	GetAccessByToken(token string) (*access.Access, error)
+	RevokeAccessToken(token string) error
 }
 
 type accessRepository struct {
@@ -26,6 +27,17 @@ func (r *accessRepository) InsertAccessToken(access *access.Access) error {
 		access.ExpiresAt,
 		access.Revoked,
 		access.SessionID)
+	return err
+}
+
+func (r *accessRepository) RevokeAccessToken(token string) error {
+	query := `UPDATE tb_access
+	SET revoked = TRUE
+	WHERE access_token = $1`
+
+	_, err := r.DB.Exec(
+		query,
+		token)
 	return err
 }
 
