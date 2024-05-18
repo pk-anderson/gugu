@@ -12,6 +12,7 @@ type UserRepository interface {
 	ListUsers() ([]user.User, error)
 	VerifyCredentials(email, password string) (*user.User, error)
 	GetUserById(id string) (*user.User, error)
+	GetUserByEmail(email string) (*user.User, error)
 }
 
 type userRepository struct {
@@ -131,6 +132,44 @@ func (r *userRepository) GetUserById(id string) (*user.User, error) {
 	)
 
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &u, nil
+}
+
+func (r *userRepository) GetUserByEmail(email string) (*user.User, error) {
+	var u user.User
+
+	query := `SELECT 
+	user_id,
+	email,
+	username,
+	bio,
+	profile_pic,
+	created_at,
+	updated_at,
+	status
+	FROM tb_users WHERE email = $1 and status = $2`
+
+	err := r.DB.QueryRow(query, email, "active").Scan(
+		&u.UserId,
+		&u.Email,
+		&u.Username,
+		&u.Bio,
+		&u.ProfilePic,
+		&u.CreatedAt,
+		&u.UpdatedAt,
+		&u.Status,
+	)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
 		return nil, err
 	}
 

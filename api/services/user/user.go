@@ -2,6 +2,7 @@ package user
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	user "gugu/interfaces/user"
 	"gugu/repositories/userRepository"
@@ -40,19 +41,24 @@ func validations(username, email, password string) []string {
 
 func (s *userService) CreateUser(username, email, password, bio string, profilePic []byte) (string, error) {
 	errs := validations(username, email, password)
-
 	if len(errs) > 0 {
 		return "", fmt.Errorf(strings.Join(errs, "; "))
 	}
 
-	userId := utils.GenerateUUID()
+	rep := userRepository.NewRepository(s.DB)
+	user, err := rep.GetUserByEmail(email)
+	if err != nil {
+		return "", err
+	}
+	if user != nil {
+		return "", errors.New("user with this email already exists")
+	}
 
+	userId := utils.GenerateUUID()
 	hashPassword, err := utils.HashPassword(password)
 	if err != nil {
 		return "", err
 	}
-
-	rep := userRepository.NewRepository(s.DB)
 
 	err = rep.InsertUser(userId, username, email, hashPassword, bio, profilePic)
 	if err != nil {
