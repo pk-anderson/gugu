@@ -3,6 +3,7 @@ package accesshandler
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"gugu/services/access"
 	"net/http"
 )
@@ -39,8 +40,14 @@ func (h *AccessHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	response := LoginResponse{Token: token}
+	jsonResponse, err := json.Marshal(response)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("error on encoding response: %s", err), http.StatusInternalServerError)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(LoginResponse{
-		Token: token,
-	})
+	w.WriteHeader(http.StatusCreated)
+	w.Write(jsonResponse)
 }

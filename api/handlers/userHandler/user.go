@@ -28,6 +28,27 @@ type CreateUserResponse struct {
 	UserId string `json:"userId"`
 }
 
+func extractCreateUserRequest(r *http.Request) (CreateUserRequest, error) {
+	var request CreateUserRequest
+	request.Username = r.FormValue("username")
+	request.Email = r.FormValue("email")
+	request.Password = r.FormValue("password")
+	request.Bio = r.FormValue("bio")
+
+	file, _, err := r.FormFile("profile_pic")
+	if err == nil {
+		defer file.Close()
+		request.ProfilePic, err = io.ReadAll(file)
+		if err != nil {
+			return CreateUserRequest{}, fmt.Errorf("error on reading profile picture: %s", err)
+		}
+	} else if err != http.ErrMissingFile {
+		return CreateUserRequest{}, fmt.Errorf("error on parsing profile picture: %s", err)
+	}
+
+	return request, nil
+}
+
 func (h *UserHandler) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseMultipartForm(10 << 20)
 	if err != nil {
@@ -35,28 +56,13 @@ func (h *UserHandler) CreateUserHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	request := CreateUserRequest{
-		Username: r.FormValue("username"),
-		Email:    r.FormValue("email"),
-		Password: r.FormValue("password"),
-		Bio:      r.FormValue("bio"),
-	}
-
-	file, _, err := r.FormFile("profile_pic")
-	if err == nil {
-		defer file.Close()
-		request.ProfilePic, err = io.ReadAll(file)
-		if err != nil {
-			http.Error(w, "error on reading profile picture", http.StatusInternalServerError)
-			return
-		}
-	} else if err != http.ErrMissingFile {
-		http.Error(w, "error on parsing profile picture", http.StatusBadRequest)
+	request, err := extractCreateUserRequest(r)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("error on extracting request: %s", err), http.StatusBadRequest)
 		return
 	}
 
 	service := user.NewService(h.DB)
-
 	userId, err := service.CreateUser(
 		request.Username,
 		request.Email,
@@ -70,7 +76,6 @@ func (h *UserHandler) CreateUserHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	response := CreateUserResponse{UserId: userId}
-
 	jsonResponse, err := json.Marshal(response)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("error on encoding response: %s", err), http.StatusInternalServerError)
@@ -90,17 +95,13 @@ type ListUsersResponse struct {
 
 func (h *UserHandler) ListUsersHandler(w http.ResponseWriter, r *http.Request) {
 	service := user.NewService(h.DB)
-
 	users, err := service.ListUsers()
 	if err != nil {
 		http.Error(w, fmt.Sprintf("error on listing users: %s", err), http.StatusInternalServerError)
 		return
 	}
 
-	response := ListUsersResponse{
-		Users: users,
-	}
-
+	response := ListUsersResponse{Users: users}
 	jsonResponse, err := json.Marshal(response)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("error on encoding response: %s", err), http.StatusInternalServerError)

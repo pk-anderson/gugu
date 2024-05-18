@@ -22,13 +22,6 @@ type accessService struct {
 	DB *sql.DB
 }
 
-type Claims struct {
-	UserID   string `json:"userId"`
-	Email    string `json:"email"`
-	Username string `json:"username"`
-	jwt.RegisteredClaims
-}
-
 func (s *accessService) Login(email, password string) (string, error) {
 	userRep := userRepository.NewRepository(s.DB)
 	user, err := userRep.VerifyCredentials(email, password)
@@ -43,7 +36,7 @@ func (s *accessService) Login(email, password string) (string, error) {
 	jwtKey := []byte(os.Getenv("JWT_SECRET"))
 
 	expirationTime := time.Now().Add(24 * time.Hour)
-	claims := &Claims{
+	claims := &access.Claims{
 		UserID:   user.UserId,
 		Email:    user.Email,
 		Username: user.Username,

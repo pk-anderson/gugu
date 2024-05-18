@@ -9,4 +9,5 @@ import (
 func SetupRoutes(router *mux.Router, db *sql.DB) {
 	SetupUserRoutes(router, db)
 	SetupAccessRoutes(router, db)
+	SetupPostRoutes(router, db)
 }
